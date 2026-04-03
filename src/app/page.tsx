@@ -1,16 +1,23 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { Input } from "@/components/ui/input";
 
-export default async function Home() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
-    redirect("/register");
-  }
-
+export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-8">
-      <h1 className="text-3xl font-semibold tracking-tight">Hello world</h1>
+      <div className="w-full max-w-md space-y-2">
+        <label
+          htmlFor="line"
+          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
+          Строка
+        </label>
+        <Input
+          id="line"
+          name="line"
+          type="text"
+          placeholder="Введите текст…"
+          autoComplete="off"
+        />
+      </div>
     </main>
   );
 }

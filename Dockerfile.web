@@ -1,0 +1,25 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+COPY . .
+
+ARG FASTIFY_INTERNAL_URL=http://api:4000
+ENV FASTIFY_INTERNAL_URL=$FASTIFY_INTERNAL_URL
+ARG JWT_SECRET=build-placeholder-for-next-middleware-min-32-chars-long
+ENV JWT_SECRET=$JWT_SECRET
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN npx prisma generate
+RUN npm run build
+
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+
+EXPOSE 3000
+
+CMD ["npm", "run", "start"]

@@ -1,14 +1,49 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: app
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d app"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "4000:4000"
+    environment:
+      DATABASE_URL: postgresql://app:app@postgres:5432/app
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-min-32-chars-long!!}
+      NODE_ENV: production
+      PORT: 4000
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      args:
+        FASTIFY_INTERNAL_URL: http://api:4000
+        JWT_SECRET: ${JWT_SECRET:-change-me-in-production-min-32-chars-long!!}
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: "file:/app/data/dev.db"
-      NEXTAUTH_URL: "http://localhost:3000"
-      NEXTAUTH_SECRET: "change-me-to-a-long-random-string-in-production"
-    volumes:
-      - sqlite-data:/app/data
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-min-32-chars-long!!}
+      FASTIFY_INTERNAL_URL: http://api:4000
+    depends_on:
+      - api
 
 volumes:
-  sqlite-data:
+  pgdata:
