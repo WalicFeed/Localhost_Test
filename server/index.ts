@@ -11,10 +11,12 @@ const AUTH_COOKIE = "auth_token";
 
 function getJwtSecret(): string {
   const s = process.env.JWT_SECRET;
-  if (!s || s.length < 16) {
-    throw new Error("JWT_SECRET must be set and at least 16 characters");
+  if (s && s.length >= 16) return s;
+  if (process.env.NODE_ENV !== "production") {
+    // Dev-only fallback — never use in production
+    return "dev-secret-key-change-me-in-env";
   }
-  return s;
+  throw new Error("JWT_SECRET must be set and at least 16 characters");
 }
 
 async function build() {
