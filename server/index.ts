@@ -75,6 +75,35 @@ async function build() {
     return { ok: true };
   });
 
+  app.post("/api/login", async (request, reply) => {
+    const body = request.body as { email?: string };
+    const email = typeof body.email === "string" ? body.email.trim() : "";
+
+    if (!email) {
+      return reply.status(400).send({ error: "Укажите email" });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return reply.status(404).send({ error: "Пользователь не найден" });
+    }
+
+    const token = await reply.jwtSign(
+      { sub: user.id, email: user.email, name: user.name },
+      { expiresIn: "7d" }
+    );
+
+    reply.setCookie(AUTH_COOKIE, token, {
+      httpOnly: true,
+      path: "/",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7,
+      secure: process.env.NODE_ENV === "production",
+    });
+
+    return { ok: true };
+  });
+
   app.post("/api/logout", async (_request, reply) => {
     reply.clearCookie(AUTH_COOKIE, { path: "/" });
     return { ok: true };

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,14 +14,12 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Link from "next/link";
 import { useLanguage } from "@/components/providers/language-provider";
 
-export default function RegisterPage() {
+export default function LoginPage() {
   const router = useRouter();
   const { t } = useLanguage();
   const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -29,22 +28,21 @@ export default function RegisterPage() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("/api/register", {
+      const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ email, name }),
+        body: JSON.stringify({ email }),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        setError(data.error ?? t("register.error"));
+        setError(data.error ?? t("login.error"));
         return;
       }
-
       router.push("/");
       router.refresh();
     } catch {
-      setError(t("register.networkError"));
+      setError(t("login.networkError"));
     } finally {
       setLoading(false);
     }
@@ -54,25 +52,13 @@ export default function RegisterPage() {
     <main className="flex min-h-screen flex-col items-center justify-center p-6">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>{t("register.title")}</CardTitle>
-          <CardDescription>{t("register.description")}</CardDescription>
+          <CardTitle>{t("login.title")}</CardTitle>
+          <CardDescription>{t("login.description")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">{t("register.name")}</Label>
-              <Input
-                id="name"
-                name="name"
-                type="text"
-                autoComplete="name"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">{t("register.email")}</Label>
+              <Label htmlFor="email">{t("login.email")}</Label>
               <Input
                 id="email"
                 name="email"
@@ -91,16 +77,16 @@ export default function RegisterPage() {
             ) : null}
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? t("register.loading") : t("register.submit")}
+              {loading ? t("login.loading") : t("login.submit")}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">
-              {t("register.haveAccount")}{" "}
+              {t("login.noAccount")}{" "}
               <Link
-                href="/login"
+                href="/register"
                 className="font-medium text-foreground underline underline-offset-4 hover:opacity-80"
               >
-                {t("register.loginLink")}
+                {t("login.registerLink")}
               </Link>
             </p>
           </form>
