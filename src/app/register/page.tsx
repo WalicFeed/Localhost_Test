@@ -13,11 +13,12 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useLanguage } from "@/components/providers/language-provider";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -31,18 +32,18 @@ export default function RegisterPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ email, password, name }),
+        body: JSON.stringify({ email, name }),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        setError(data.error ?? "Ошибка регистрации");
+        setError(data.error ?? t("register.error"));
         return;
       }
 
       router.push("/");
       router.refresh();
     } catch {
-      setError("Сетевая ошибка");
+      setError(t("register.networkError"));
     } finally {
       setLoading(false);
     }
@@ -52,13 +53,13 @@ export default function RegisterPage() {
     <main className="flex min-h-screen flex-col items-center justify-center p-6">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Регистрация</CardTitle>
-          <CardDescription>Укажите email, пароль и имя</CardDescription>
+          <CardTitle>{t("register.title")}</CardTitle>
+          <CardDescription>{t("register.description")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Имя</Label>
+              <Label htmlFor="name">{t("register.name")}</Label>
               <Input
                 id="name"
                 name="name"
@@ -70,7 +71,7 @@ export default function RegisterPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("register.email")}</Label>
               <Input
                 id="email"
                 name="email"
@@ -81,19 +82,6 @@ export default function RegisterPage() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Пароль</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                minLength={6}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
 
             {error ? (
               <p className="text-sm text-destructive" role="alert">
@@ -102,7 +90,7 @@ export default function RegisterPage() {
             ) : null}
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Подождите…" : "Зарегистрироваться"}
+              {loading ? t("register.loading") : t("register.submit")}
             </Button>
           </form>
         </CardContent>

@@ -3,7 +3,6 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import cookie from "@fastify/cookie";
 import jwt from "@fastify/jwt";
-import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -40,15 +39,13 @@ async function build() {
   app.post("/api/register", async (request, reply) => {
     const body = request.body as {
       email?: string;
-      password?: string;
       name?: string;
     };
     const email = typeof body.email === "string" ? body.email.trim() : "";
-    const password = typeof body.password === "string" ? body.password : "";
     const name = typeof body.name === "string" ? body.name.trim() : "";
 
-    if (!email || !password || !name) {
-      return reply.status(400).send({ error: "Укажите email, пароль и имя" });
+    if (!email || !name) {
+      return reply.status(400).send({ error: "Укажите email и имя" });
     }
 
     const existing = await prisma.user.findUnique({ where: { email } });
@@ -56,9 +53,8 @@ async function build() {
       return reply.status(409).send({ error: "Этот email уже зарегистрирован" });
     }
 
-    const hashed = await bcrypt.hash(password, 12);
     const user = await prisma.user.create({
-      data: { email, password: hashed, name },
+      data: { email, name },
     });
 
     const token = await reply.jwtSign(
