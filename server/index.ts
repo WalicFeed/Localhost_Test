@@ -164,7 +164,13 @@ async function build() {
 
     // Create JWT session
     const jwtToken = await reply.jwtSign(
-      { sub: user.id, email: user.email, onboarded: user.onboarded },
+      { 
+        sub: user.id, 
+        email: user.email, 
+        onboarded: user.onboarded,
+        paymentCompleted: user.paymentCompleted || user.paymentSkipped,
+        brandVoiceCompleted: user.brandVoiceCompleted,
+      },
       { expiresIn: "7d" }
     );
 
@@ -176,8 +182,15 @@ async function build() {
       secure: process.env.NODE_ENV === "production",
     });
 
-    // Redirect based on onboarding status
-    const redirectUrl = user.onboarded ? "/" : "/onboarding";
+    // Redirect based on completion status
+    let redirectUrl = "/";
+    if (!user.onboarded) {
+      redirectUrl = "/onboarding";
+    } else if (!user.paymentCompleted && !user.paymentSkipped) {
+      redirectUrl = "/payment";
+    } else if (!user.brandVoiceCompleted) {
+      redirectUrl = "/brand-voice";
+    }
     return reply.redirect(redirectUrl);
   });
 
@@ -227,7 +240,172 @@ async function build() {
 
     // Issue new JWT with updated onboarded status
     const newToken = await reply.jwtSign(
-      { sub: updatedUser.id, email: updatedUser.email, onboarded: true },
+      { 
+        sub: updatedUser.id, 
+        email: updatedUser.email, 
+        onboarded: true,
+        paymentCompleted: updatedUser.paymentCompleted || updatedUser.paymentSkipped,
+        brandVoiceCompleted: updatedUser.brandVoiceCompleted,
+      },
+      { expiresIn: "7d" }
+    );
+
+    reply.setCookie(AUTH_COOKIE, newToken, {
+      httpOnly: true,
+      path: "/",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7,
+      secure: process.env.NODE_ENV === "production",
+    });
+
+    return { ok: true };
+  });
+
+  // Payment setup - save Stripe payment method
+  app.post("/api/payment/setup", async (request, reply) => {
+    const token = request.cookies[AUTH_COOKIE];
+    if (!token) {
+      return reply.status(401).send({ error: "Unauthorized" });
+    }
+
+    let payload;
+    try {
+      payload = await request.jwtVerify() as { sub: string };
+    } catch {
+      return reply.status(401).send({ error: "Invalid session" });
+    }
+
+    const body = request.body as { paymentMethodId?: string };
+    const { paymentMethodId } = body;
+
+    if (!paymentMethodId) {
+      return reply.status(400).send({ error: "Payment method ID is required" });
+    }
+
+    // Get or create Stripe customer
+    const user = await prisma.user.findUnique({ where: { id: payload.sub } });
+    if (!user) {
+      return reply.status(404).send({ error: "User not found" });
+    }
+
+    let customerId = user.stripeCustomerId;
+
+    // Note: Stripe integration would happen here
+    // For now, we just store the payment method ID
+    const updatedUser = await prisma.user.update({
+      where: { id: payload.sub },
+      data: {
+        paymentCompleted: true,
+        stripePaymentMethodId: paymentMethodId,
+        trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days trial
+      },
+    });
+
+    // Issue new JWT with updated payment status
+    const newToken = await reply.jwtSign(
+      { 
+        sub: updatedUser.id, 
+        email: updatedUser.email, 
+        onboarded: updatedUser.onboarded,
+        paymentCompleted: true,
+        brandVoiceCompleted: updatedUser.brandVoiceCompleted,
+      },
+      { expiresIn: "7d" }
+    );
+
+    reply.setCookie(AUTH_COOKIE, newToken, {
+      httpOnly: true,
+      path: "/",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7,
+      secure: process.env.NODE_ENV === "production",
+    });
+
+    return { ok: true };
+  });
+
+  // Skip payment (debug only)
+  app.post("/api/payment/skip", async (request, reply) => {
+    const token = request.cookies[AUTH_COOKIE];
+    if (!token) {
+      return reply.status(401).send({ error: "Unauthorized" });
+    }
+
+    let payload;
+    try {
+      payload = await request.jwtVerify() as { sub: string };
+    } catch {
+      return reply.status(401).send({ error: "Invalid session" });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: payload.sub },
+      data: {
+        paymentSkipped: true,
+      },
+    });
+
+    // Issue new JWT with payment skipped status
+    const newToken = await reply.jwtSign(
+      { 
+        sub: updatedUser.id, 
+        email: updatedUser.email, 
+        onboarded: updatedUser.onboarded,
+        paymentCompleted: true, // Set to true since skipped counts as completed
+        brandVoiceCompleted: updatedUser.brandVoiceCompleted,
+      },
+      { expiresIn: "7d" }
+    );
+
+    reply.setCookie(AUTH_COOKIE, newToken, {
+      httpOnly: true,
+      path: "/",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7,
+      secure: process.env.NODE_ENV === "production",
+    });
+
+    return { ok: true };
+  });
+
+  // Brand voice submission
+  app.post("/api/brand-voice", async (request, reply) => {
+    const token = request.cookies[AUTH_COOKIE];
+    if (!token) {
+      return reply.status(401).send({ error: "Unauthorized" });
+    }
+
+    let payload;
+    try {
+      payload = await request.jwtVerify() as { sub: string };
+    } catch {
+      return reply.status(401).send({ error: "Invalid session" });
+    }
+
+    const body = request.body as { brandVoiceData?: Record<string, unknown> };
+    const { brandVoiceData } = body;
+
+    if (!brandVoiceData) {
+      return reply.status(400).send({ error: "Brand voice data is required" });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: payload.sub },
+      data: {
+        brandVoiceCompleted: true,
+        brandVoiceData,
+      },
+    });
+
+    // Issue new JWT with brand voice completed status
+    const newToken = await reply.jwtSign(
+      { 
+        sub: updatedUser.id, 
+        email: updatedUser.email, 
+        onboarded: updatedUser.onboarded,
+        paymentCompleted: updatedUser.paymentCompleted || updatedUser.paymentSkipped,
+        brandVoiceCompleted: true,
+      },
       { expiresIn: "7d" }
     );
 

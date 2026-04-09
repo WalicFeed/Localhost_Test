@@ -28,24 +28,46 @@ export async function middleware(request: NextRequest) {
       const key = new TextEncoder().encode(secret);
       const { payload } = await jwtVerify(token, key);
       
-      // Check onboarding status via API call to backend
-      // We'll add the onboarded flag to the JWT payload in the server
       const onboarded = payload.onboarded as boolean | undefined;
+      const paymentCompleted = payload.paymentCompleted as boolean | undefined;
+      const brandVoiceCompleted = payload.brandVoiceCompleted as boolean | undefined;
 
-      // If user is authenticated but not onboarded, redirect to onboarding
-      if (onboarded === false && pathname !== "/onboarding") {
-        return NextResponse.redirect(new URL("/onboarding", request.url));
+      // Determine the next required step
+      let nextStep = "/";
+      if (!onboarded) {
+        nextStep = "/onboarding";
+      } else if (!paymentCompleted) {
+        nextStep = "/payment";
+      } else if (!brandVoiceCompleted) {
+        nextStep = "/brand-voice";
       }
 
-      // If user is onboarded and trying to access onboarding page, redirect to home
-      if (onboarded === true && pathname === "/onboarding") {
+      // Skip middleware for API routes
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.next();
+      }
+
+      // If user needs to complete steps and is not on the right page
+      if (nextStep !== "/" && pathname !== nextStep) {
+        // Allow users to go back in the flow (e.g., from payment to onboarding)
+        const flowOrder = ["/onboarding", "/payment", "/brand-voice", "/"];
+        const currentIndex = flowOrder.indexOf(pathname);
+        const nextIndex = flowOrder.indexOf(nextStep);
+        
+        // Only redirect forward, not backward
+        if (currentIndex === -1 || currentIndex > nextIndex) {
+          return NextResponse.redirect(new URL(nextStep, request.url));
+        }
+      }
+
+      // If user completed everything and trying to access intermediate steps, redirect home
+      if (nextStep === "/" && ["/onboarding", "/payment", "/brand-voice"].includes(pathname)) {
         return NextResponse.redirect(new URL("/", request.url));
       }
 
-      // If authenticated and trying to access register, redirect to appropriate page
+      // If authenticated and trying to access register, redirect to next step
       if (pathname === "/register") {
-        const redirectUrl = onboarded ? "/" : "/onboarding";
-        return NextResponse.redirect(new URL(redirectUrl, request.url));
+        return NextResponse.redirect(new URL(nextStep, request.url));
       }
 
       return NextResponse.next();

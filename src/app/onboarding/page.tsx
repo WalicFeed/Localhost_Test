@@ -112,7 +112,7 @@ export default function OnboardingPage() {
         return;
       }
 
-      router.push("/");
+      router.push("/payment");
       router.refresh();
     } catch {
       setError("Network error. Please try again.");

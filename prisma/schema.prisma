@@ -20,6 +20,17 @@ model User {
   channelOther String?
   helpTopics String[] @default([])
   helpTopicsOther String?
+  
+  // Payment fields
+  paymentCompleted Boolean @default(false)
+  paymentSkipped Boolean @default(false)
+  stripeCustomerId String?
+  stripePaymentMethodId String?
+  trialEndsAt DateTime?
+  
+  // Brand voice fields
+  brandVoiceCompleted Boolean @default(false)
+  brandVoiceData Json?
 }
 
 model VerificationToken {
