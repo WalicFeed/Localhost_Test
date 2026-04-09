@@ -8,13 +8,13 @@ export default function Home() {
           htmlFor="line"
           className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
         >
-          Строка
+          Text Line
         </label>
         <Input
           id="line"
           name="line"
           type="text"
-          placeholder="Введите текст…"
+          placeholder="Enter text..."
           autoComplete="off"
         />
       </div>
