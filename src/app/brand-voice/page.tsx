@@ -6,34 +6,153 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 
-// Placeholder questions - will be replaced with actual questions from Notion
 const BRAND_VOICE_QUESTIONS = [
   {
     id: "q1",
-    question: "What is your primary goal?",
-    type: "radio" as const,
-    options: ["Build audience", "Generate leads", "Establish authority", "Other"],
+    question: "Опишите себя",
+    type: "textarea" as const,
+    required: true,
+    description: "Пример: Меня зовут Юля Максимова.\nЯ маркетолог, специалист по продвижению компаний и личных брендов, коуч и ментор. Я помогаю находить нестандартные способы продвижения, мотивировать себя и заниматься дистрибуцией контента.\nТакже я опытная маркетинговая руководительница с международным опытом.\nБолее 10 лет я реализую стратегии роста, руковожу командами, строю контент-воронки, развиваю личные бренды и организую масштабные онлайн-проекты.",
+    placeholder: "Your answer",
   },
   {
     id: "q2",
-    question: "Who is your target audience?",
+    question: "Описание вашего продукта / проекта",
     type: "textarea" as const,
-    placeholder: "Describe your ideal audience...",
+    required: true,
+    description: "Пример: Мой проект называется Highlight Brand Lab лаборатория личного бренда.\nЭто компания по развитию личного бренда для экспертов. Это мастерская по созданию контента и упаковке экспертности.\nМой проект решает ключевые проблемы:\n- страх проявленности,\n- отсутствие стратегии и системы продвижения,\n- неупакованная экспертность и хаотичный контент,\n- неупакованная экспертность и хаотичный контент,\n- отсутствие клиентов из личного бренда.\nОсновные преимущества включают:\n- быстрый запуск и упаковку без прокрастинации,\n- регулярный выход в контент и работающая воронка,\n- рост видимости и появление клиентов уже во время участия,\n- поддержку и структуру, которые помогают дойти до результата.",
+    placeholder: "Your answer",
   },
   {
     id: "q3",
-    question: "What tone should your brand have?",
-    type: "radio" as const,
-    options: ["Professional", "Casual", "Friendly", "Authoritative", "Other"],
+    question: "Опишите вашу целевую аудиторию",
+    type: "textarea" as const,
+    required: true,
+    description: "Пример: Моя целевая аудитория это: эксперты с опытом, но без сформированного личного бренда, специалисты, сменившие профессию и ищущие клиентов, фаундеры и владельцы бизнесов, которым нужна публичность.\nОни нуждаются в: партнёре, наставнике и лидере, структурировании опыта, упаковке и сопровождении, поддержке и среде, где можно расти и проявляться.\nОни сталкиваются с такими проблемами, как: отсутствие системы продвижения, прокрастинация и страх самопрезентации, разрозненный опыт без понятного продукта, отсутствие внешней опоры.",
+    placeholder: "Your answer",
   },
   {
     id: "q4",
-    question: "What makes your brand unique?",
+    question: "Добавьте 5 текстов написанных вами БЕЗ участия ИИ и даже без редактирования с помощью ЛЮБОЙ ИИ",
     type: "textarea" as const,
-    placeholder: "Describe what sets you apart...",
+    required: true,
+    description: "Пояснение:\nТекст 1 (вставляете текст)\nТекст 2 (вставляете текст)\nТекст 3 (вставляете текст)\nТекст 4 (вставляете текст)\nТекст 5 (вставляете текст)",
+    placeholder: "Your answer",
+  },
+  {
+    id: "q5",
+    question: "О чем планируете создавать контент?",
+    type: "checkbox" as const,
+    required: true,
+    description: "(Select as many as you like)",
+    options: [
+      "Экспертный / обучающий контент",
+      "Продажи / маркетинг",
+      "Личный бренд",
+      "Бизнес / предпринимательство",
+      "Психология / саморазвитие",
+      "Lifestyle / блог",
+      "Другое: напишите ниже",
+    ],
+  },
+  {
+    id: "q6",
+    question: "О чем планируете создавать контент для свободного ответа",
+    type: "text" as const,
+    required: false,
+    placeholder: "Your answer",
+  },
+  {
+    id: "q7",
+    question: "Как вы хотите звучать?",
+    type: "checkbox" as const,
+    required: true,
+    description: "(Select as many as you like)",
+    options: [
+      "Спокойно и рассудительно",
+      "Энергично и заряжающе",
+      "Дружелюбно",
+      "Строго и по делу",
+      "Провокационно",
+      "Заботливо",
+      "Уверенно",
+      "С юмором",
+      "Минималистично",
+      "Глубоко и аналитично",
+    ],
+  },
+  {
+    id: "q8",
+    question: "Насколько формальными вы хотите быть?",
+    type: "checkbox" as const,
+    required: true,
+    description: "(Select as many as you like)",
+    options: [
+      "На ты легко и живо",
+      "На вы но без формализмов",
+      "Официально",
+      "Микс на ты и на в зависимости от канала",
+    ],
+  },
+  {
+    id: "q9",
+    question: "Что для вас важнее всего в тексте?",
+    type: "checkbox" as const,
+    required: true,
+    description: "(Select as many as you like)",
+    options: [
+      "Польза",
+      "Эмоции",
+      "Простота",
+      "Глубина",
+      "Продажи",
+      "Личное присутствие",
+    ],
+  },
+  {
+    id: "q10",
+    question: "Хотите поделиться чем-то еще? Просто напишите свои мысли ниже",
+    type: "textarea" as const,
+    required: false,
+    placeholder: "Your answer",
+  },
+  {
+    id: "q11",
+    question: "Ссылка на ваш основной блог",
+    type: "text" as const,
+    required: true,
+    placeholder: "Your answer",
+  },
+  {
+    id: "q12",
+    question: "Ссылка на другие ваши соцсети",
+    type: "text" as const,
+    required: false,
+    placeholder: "Your answer",
+  },
+  {
+    id: "q13",
+    question: "Ссылка на другие ваши соцсети",
+    type: "text" as const,
+    required: false,
+    placeholder: "Your answer",
+  },
+  {
+    id: "q14",
+    question: "Ссылка на другие ваши соцсети",
+    type: "text" as const,
+    required: false,
+    placeholder: "Your answer",
+  },
+  {
+    id: "q15",
+    question: "Ссылка на другие ваши соцсети",
+    type: "text" as const,
+    required: false,
+    placeholder: "Your answer",
   },
 ];
 
@@ -41,7 +160,7 @@ export default function BrandVoicePage() {
   const router = useRouter();
   const [started, setStarted] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -52,9 +171,27 @@ export default function BrandVoicePage() {
     setAnswers((prev) => ({ ...prev, [currentQuestion.id]: value }));
   };
 
+  const handleCheckboxChange = (option: string, checked: boolean) => {
+    setAnswers((prev) => {
+      const current = (prev[currentQuestion.id] as string[]) || [];
+      if (checked) {
+        return { ...prev, [currentQuestion.id]: [...current, option] };
+      } else {
+        return { ...prev, [currentQuestion.id]: current.filter((item) => item !== option) };
+      }
+    });
+  };
+
   const canProceed = () => {
+    if (!currentQuestion.required) return true;
+    
     const answer = answers[currentQuestion.id];
-    return answer && answer.trim().length > 0;
+    
+    if (currentQuestion.type === "checkbox") {
+      return Array.isArray(answer) && answer.length > 0;
+    }
+    
+    return answer && typeof answer === "string" && answer.trim().length > 0;
   };
 
   const handleNext = () => {
@@ -143,39 +280,56 @@ export default function BrandVoicePage() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">
-            <Label className="text-lg font-semibold">{currentQuestion.question}</Label>
+            <div>
+              <Label className="text-lg font-semibold">
+                {currentQuestion.question}
+                {currentQuestion.required && <span className="text-destructive ml-1">*</span>}
+              </Label>
+              {currentQuestion.description && (
+                <p className="text-sm text-muted-foreground mt-2 whitespace-pre-line">
+                  {currentQuestion.description}
+                </p>
+              )}
+            </div>
 
-            {currentQuestion.type === "radio" && (
-              <RadioGroup
-                value={answers[currentQuestion.id] || ""}
-                onValueChange={handleAnswer}
-              >
-                {currentQuestion.options?.map((option) => (
-                  <div key={option} className="flex items-center space-x-2">
-                    <RadioGroupItem value={option} id={`${currentQuestion.id}-${option}`} />
-                    <Label
-                      htmlFor={`${currentQuestion.id}-${option}`}
-                      className="font-normal cursor-pointer"
-                    >
-                      {option}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
+            {currentQuestion.type === "checkbox" && (
+              <div className="space-y-3">
+                {currentQuestion.options?.map((option) => {
+                  const currentAnswers = (answers[currentQuestion.id] as string[]) || [];
+                  return (
+                    <div key={option} className="flex items-start space-x-2">
+                      <Checkbox
+                        id={`${currentQuestion.id}-${option}`}
+                        checked={currentAnswers.includes(option)}
+                        onCheckedChange={(checked) =>
+                          handleCheckboxChange(option, checked as boolean)
+                        }
+                      />
+                      <Label
+                        htmlFor={`${currentQuestion.id}-${option}`}
+                        className="font-normal cursor-pointer leading-relaxed"
+                      >
+                        {option}
+                      </Label>
+                    </div>
+                  );
+                })}
+              </div>
             )}
 
             {currentQuestion.type === "textarea" && (
               <Textarea
-                value={answers[currentQuestion.id] || ""}
+                value={(answers[currentQuestion.id] as string) || ""}
                 onChange={(e) => handleAnswer(e.target.value)}
                 placeholder={currentQuestion.placeholder}
-                rows={4}
+                rows={6}
+                className="resize-none"
               />
             )}
 
             {currentQuestion.type === "text" && (
               <Input
-                value={answers[currentQuestion.id] || ""}
+                value={(answers[currentQuestion.id] as string) || ""}
                 onChange={(e) => handleAnswer(e.target.value)}
                 placeholder={currentQuestion.placeholder}
               />
