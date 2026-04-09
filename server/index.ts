@@ -3,7 +3,7 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import cookie from "@fastify/cookie";
 import jwt from "@fastify/jwt";
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import crypto from "crypto";
 import { sendMagicLink } from "./lib/email";
 
@@ -382,7 +382,7 @@ async function build() {
       return reply.status(401).send({ error: "Invalid session" });
     }
 
-    const body = request.body as { brandVoiceData?: Record<string, unknown> };
+    const body = request.body as { brandVoiceData?: Prisma.InputJsonValue };
     const { brandVoiceData } = body;
 
     if (!brandVoiceData) {
